@@ -1,0 +1,115 @@
+Configure a secure network:
+Implement the security measures in the router and switches for a secure access from a remote host.
+
+Requirements
+Router
+Switches
+PC
+
+Connection
+1.Router to SW0 - GigbitEthernet0/1
+2. Router to SW1 - GigbitEthernet0/0
+3. SW0 to PC0 - FastEthernet 0/2  
+4. SW0 to Laptop - FastEthernet 0/3
+5. SW1 to PC1 - FastEthernet 0/2
+
+
+Steps to configure a secure network:
+1.Configure the Router
+2. Configure SW0
+
+
+
+Step 1:Router Configuration:
+
+a. Enter configuration mode:
+en
+config t
+
+b. Assign IP address
+hostname R1
+interface g0/0/1
+ip address 192.168.22.1 255.255.255.0 # Instead this use your register number. Eg: CB.EN.U4AIE19010, then the IP address is 192.168.10.1 
+no shutdown
+exit
+
+
+
+interface g0/0/0
+ip address 192.168.2.1 255.255.255.0 # Make changes here accordingly .i.e 192.168.80.1
+no shutdown
+
+exit
+
+
+c. Assign message for unauthorized access
+banner motd @ Unauthorized @
+
+d. Implement security over the router
+security password min-length 10
+line console 0
+exec-timeout 7 0 
+password Deepthi1234 # The password should include 'part of your name' instead of 'Amrita'.
+login
+
+#This is for SSH connection by a remote host
+line vty 0 4
+exec-timeout 7 0 
+password Deepthi1234 # Make changes here
+login
+transport input ssh
+
+# Create the domain
+ip domain-name amritaAIE.org
+crypto key generate rsa
+1024
+username Amritaadmin secret Deepthi1234  # Make changes here
+
+
+#Encrypt the password and fix the number of incorrect attempts
+enable secret Deepthi1234
+service password-encryption
+login block-for 45 attempts 3 within 100
+end
+
+exit
+
+
+Step 2: Configure a switch
+a. Enter configuration mode:
+en
+config t
+
+b. Assign IP address
+hostname SW0
+interface vlan 1
+ip address 192.168.22.254 255.255.255.0 # Make appropriate changes here
+no shutdown
+exit
+
+c. Assign message for unauthorized access
+banner motd @ Unauthorized @
+
+d. Implement security over the router
+line console 0
+exec-timeout 7 0
+password Deepthi1234 # Make changes here
+login
+
+#This is for SSH connection by a remote host
+line vty 0 4 
+exec-timeout 7 0
+password Deepthi1234 # Make changes here
+login
+enable secret Deepthi1234
+service password-encryption 
+interface range fastEthernet0/4-24,GigabitEthernet0/2
+shutdown
+end
+exit
+
+
+Connecting from the remote host:
+SSH -L Amritaadmin 192.168.2.1 # Make changes here i.e. 192.168.80.2
+
+
