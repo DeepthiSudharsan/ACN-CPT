@@ -1,0 +1,29 @@
+6 routers
+connect using the pic
+CONNECTIONS
+give the wires some ips like 14.0.0.0
+SWITCH ON PORTS
+go to router 0 and give the port also an ip similar to wire like 14.0.0.2
+and then go to the router that is connected to router0 thru this wire and name that as 14.0.0.3
+After doing for all wires connecting all routers
+
+Example Router 0,
+Open CLI,
+en
+config t
+router ospf 1
+network 14.0.0.0 0.255.255.255 area 0
+network 19.0.0.0 0.255.255.255 area 0
+network 10.0.0.0 0.255.255.255 area 0
+network 192.168.1.0 0.0.0.255 area 0
+exit
+exit
+and so on for all routers
+
+WEIGHTS
+en
+config t
+int fa4/0 ( for example se2/0)
+ip ospf cost (weight datatype int :) )
+exit
+Send message
