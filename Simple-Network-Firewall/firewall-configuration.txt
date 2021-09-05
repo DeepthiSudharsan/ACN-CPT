@@ -1,0 +1,134 @@
+To configure a Firewall for a small network:
+The configuration is done via line console from PC0
+
+Components:
+ Server
+ Router - 1841
+ Security device - AS 5505
+ PC
+ Switch
+
+Connections:
+1.Security device to Router - Ethernet0/0
+2.Security device to Switch - Ethernet0/1
+3.Switch to PC0 - FastEthernet0/2
+4.Switch to PC1 - FastEthernet0/3
+5. Router to Server - FastEthernet0/1
+6. PC0 to Security device - Console
+
+Note: In PC0 chose RS 232 is chosen to connect with Security device
+
+
+Steps to configure a Firewall for a small network:
+Step 1. Configure the server
+Step 2. Configure Firewall via PC0
+Step 3. Configure Router
+Step 4: DHCP and DNS configuration and the path
+Step 5: Create access-list
+
+
+Step 1:Configure the server:
+IP address     : 8.8.8.8
+Subnet mask    : 255.255.255.0
+Default gateway: 8.8.8.1
+
+
+
+Step 2:Configure firewall:
+
+a.Enable
+b. Check for IP address assigned through DHCP and remove them
+c. Assign new IP address
+
+
+a. Enter configuration mode:
+In PC0:
+enable
+show running
+
+b Check for IP address assigned through DHCP and remove them
+configure terminal
+interface vlan 1
+no ip address
+no dhcp address 192.168.1.5-192.168.1.6 inside
+end
+
+show running
+
+c. Assign new IP address
+configure terminal
+interface vlan 1
+ip address 172.16.1.1 255.255.255.0  # Instead this use your register number. Eg: CB.EN.U4AIE19010, then the IP address is 172.16.10.1 and subnet mask is same
+nameif inside
+security-level 100
+exit
+
+inter e0/1
+switchport access vlan 1
+exit
+
+interface vlan 2
+ip address 203.1.1.2 255.255.255.0 # Change according to your register number. Eg: CB.EN.U4AIE19010, then the IP address is 203.1.1.10
+no shutdown
+nameif outside
+security-level 0
+exit
+
+inter e0/0
+switchport access vlan 2
+exit
+
+
+Step 3:Configure Router
+a. Enter configuration mode:
+enable
+configure terminal
+
+b Assign IP address
+host ISP
+inter f0/0
+ip address 203.1.1.1 255.255.255.0
+no shutdown
+
+inter f0/1
+ip address 8.8.8.1 255.255.255.0
+no shutdown
+exit
+
+Step 4: DHCP and DNS configuration and the path
+Configure Server
+1. Enable DHCP configuration mode in PCs
+2. DHCP and DNS configuration
+
+
+In PC0:
+dhcpd address 172.16.1.5-172.16.1.6 inside # Instead this use your register number. Eg: CB.EN.U4AIE19010, then the IP address range is 172.16.10.5-172.16.10.6 
+dhcpd dns 8.8.8.8 interface inside 
+end
+
+show running
+
+Configure the default route and dynamic route on ISP
+In PC0:
+configure terminal 
+route outside 0.0.0.0 0.0.0.0 203.1.1.1
+exit
+
+In Router:
+router ospf 1
+network 203.1.1.1 0.0.0.255 area 1
+network 8.8.8.0 0.0.0.255 area 1
+
+
+In PC0:
+configure terminal
+object network LAN
+subnet 172.16.1.0 255.255.255.0 # Instead this use your register number. Eg: CB.EN.U4AIE19010, then the IP address is 172.16.10.0 and subnet mask is same
+nat (inside,outside) dynamic interface
+exit
+
+Step 5: Create access-list
+configure terminal
+access-list in_to_internet extended permit tcp any any
+access-list in_to_internet extended permit icmp any any
+access-group in_to_internet in interface outside
